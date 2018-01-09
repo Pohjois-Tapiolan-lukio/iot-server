@@ -7,10 +7,10 @@ API
 
 | URL                                | Description                                            |
 |------------------------------------|--------------------------------------------------------|
-| /api/v1/\<name\>/create/\<types\>  | Creates a new table \<name\> with columns of \<types\> |
-|                                    | Eg. /foo/create/int,real,real                          |
+| /api/v1/\<name\>/create/\<types\>  | Creates a new table \<name\> with named columns        |
+|                                    | Eg. /foo/create/time;temp;pressure                     |
 | /api/v1/\<name\>/insert/\<values\> | Inserts \<values\> into the table \<name\>             |
-|                                    | Eg. /foo/insert/42,1.41,3.14                           |
+|                                    | Eg. /foo/insert/0.0;21.3;1.1                           |
 | /api/v1/\<name\>/print             | Prints out the content of the table \<name\> as HTML   |
 
 Development setup

@@ -3,9 +3,9 @@
 # This is a small API for entering data into a PostgreSQL database.
 # Current usage:
 # - /<name>/create/<types>    Creates a new table <name> with columns of <types>
-#                             Eg. /foo/create/int,real,real
+#                             Eg. /foo/create/int;real;real
 # - /<name>/insert/<values>   Inserts <values> into the table <name>
-#                             Eg. /foo/insert/42,1.41,3.14
+#                             Eg. /foo/insert/42;1.41;3.14
 # - /<name>/print             Prints out the contents of the table <name> as HTML
 
 import psycopg2
@@ -37,7 +37,7 @@ def root():
 # Testing url
 @app.route("/api/v1/command/to/run")
 def api_example():
-    return "The Pohjis IoT server is running properly, congratulations!"
+    return "Pohjis IoT Server"
 
 # Prints out the values contained in the table <name>
 @app.route("/api/v1/<name>/print")
@@ -57,25 +57,32 @@ def api_print(name):
 @app.route("/api/v1/<name>/insert/<values>")
 def insert(name, values):
     values = ", ".join(values.split(";"))
-    cur.execute("INSERT INTO " + name + " VALUES (" + values + ");")
-    conn.commit()
-    return "Ok!"
+    try:
+        cur.execute("INSERT INTO " + name + " VALUES (" + values + ");")
+        conn.commit()
+        return "Ok! Inserted \"" + values + "\" into the table \"" + name + "\"."
+    except psycopg2.Error as e:
+        content = "Error! Is the URL valid?"
+        content += "<br>" + e.pgerror
+        conn.rollback()
+        return content, 400
 
-@app.route("/api/v1/<name>/create/<types>")
-def create(name, types):
-    types_sql = ""
-    i = 0
-    for type in types.split(","):
-        # Create a name
-        var_name = "var" + str(i)
-        i += 1
-        # Add the variable to the list
-        types_sql += var_name + " " + type + ", "
-    types_sql = types_sql[:-2]
-    cur.execute("DROP TABLE IF EXISTS " + name + ";")
-    cur.execute("CREATE TABLE " + name + " (" + types_sql + ");")
-    conn.commit()
-    return "Ok!"
+@app.route("/api/v1/<name>/create/<params>")
+def create(name, params):
+    param_list = []
+    for param in params.split(";"):
+        param_list.append(param + " varchar")
+    params = ", ".join(param_list)
+    try:
+        cur.execute("DROP TABLE IF EXISTS " + name + ";")
+        cur.execute("CREATE TABLE " + name + " (" + params + ");")
+        conn.commit()
+        return "Ok! Created the table \"" + name + "\"."
+    except psycopg2.Error as e:
+        content = "Error! Is the URL valid? (Params: " + params + ")"
+        content += "<br>" + e.pgerror
+        conn.rollback()
+        return content, 400
 
 
 ## Server ##
