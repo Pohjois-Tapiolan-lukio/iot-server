@@ -1,6 +1,7 @@
 #!/bin/python
 
 # This is a small API for entering data into a PostgreSQL database.
+# It's also extremely insecure, and easy to fiddle with. Have fun hacking!
 # Current usage:
 # - /<name>/create/<types>    Creates a new table <name> with columns of <types>
 #                             Eg. /foo/create/int;real;real
@@ -42,15 +43,22 @@ def api_example():
 # Prints out the values contained in the table <name>
 @app.route("/api/v1/<name>/print")
 def api_print(name):
+    def write_cur_to_output(one_line):
+        nonlocal output
+        if one_line: output += "<tr>"
+        for record in cur:
+            if not one_line: output += "<tr>"
+            for value in (record):
+                output += "<td>" + str(value) + "</td>"
+            if not one_line: output += "</tr>"
+        if one_line: output += "</tr>"
     output = "<div>"
     output += "<h3>" + name + "</h3>"
     output += "<table>"
+    cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
+    write_cur_to_output(True)
     cur.execute("SELECT * FROM " + name + ";")
-    for record in cur:
-        output += "<tr>"
-        for value in (record):
-            output += "<td>" + str(value) + "</td>"
-        output += "</tr>"
+    write_cur_to_output(False)
     output += "</table>"
     return output
 

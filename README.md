@@ -5,13 +5,13 @@ This is a small server that provides an API for entering data into a database fo
 API
 ---
 
-| URL                              | Description                                            |
-|----------------------------------|--------------------------------------------------------|
-| `/api/v1/<name>/create/<types>`  | Creates a new table `<name>` with columns of `<types>` |
-|                                  | Eg. /foo/create/int;real;real                          |
-| `/api/v1/<name>/insert/<values>` | Inserts `<values>` into the table `<name>`             |
-|                                  | Eg. /foo/insert/42;1.41;3.14                           |
-| `/api/v1/<name>/print`           | Prints out the content of the table `<name>` as HTML   |
+| URL                              | Description                                             |
+|----------------------------------|---------------------------------------------------------|
+| `/api/v1/<name>/create/<cols>`  | Creates a new table `<name>` with columns named `<cols>` |
+|                                  | Eg. /foo/create/time;temp;humidity                      |
+| `/api/v1/<name>/insert/<values>` | Inserts `<values>` into the table `<name>`              |
+|                                  | Eg. /foo/insert/1.0;21.4;0.8                            |
+| `/api/v1/<name>/print`           | Prints out the content of the table `<name>` as HTML    |
 
 Development setup
 -----------------
