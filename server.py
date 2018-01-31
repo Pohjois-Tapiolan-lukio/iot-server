@@ -33,7 +33,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def root():
-    return "The <a href='https://github.com/pohjois-tapiolan-lukio/iot-server'>Pohjis IoT server</a> is running."
+    return "<a href='https://github.com/pohjois-tapiolan-lukio/iot-server'>Pohjis IoT server</a>"
+
+@app.route("/heippa")
+def heippa():
+    return "Moikka!"
 
 # Testing url
 @app.route("/api/v1/command/to/run")
@@ -43,40 +47,47 @@ def api_example():
 # Prints out the values contained in the table <name>
 @app.route("/api/v1/<name>/print")
 def api_print(name):
+    name = name.replace("-", "_")
     def write_cur_to_output(one_line):
         nonlocal output
         if one_line: output += "<tr>"
         for record in cur:
             if not one_line: output += "<tr>"
             for value in (record):
-                output += "<td>" + str(value) + "</td>"
+                output += "<td style='margin-right:1em'>" + str(value) + "</td>"
             if not one_line: output += "</tr>"
         if one_line: output += "</tr>"
     output = "<div>"
     output += "<h3>" + name + "</h3>"
+    output += "<button>Export to .csv</button>"
     output += "<table>"
     cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
     write_cur_to_output(True)
     cur.execute("SELECT * FROM " + name + ";")
     write_cur_to_output(False)
     output += "</table>"
+    print("[INFO] Printed table " + name)
     return output
 
 @app.route("/api/v1/<name>/insert/<values>")
 def insert(name, values):
+    name = name.replace("-", "_")
     values = ", ".join(values.split(";"))
     try:
         cur.execute("INSERT INTO " + name + " VALUES (" + values + ");")
         conn.commit()
+        print("[INFO] Inserted \"" + values + "\" into the table " + name)
         return "Ok! Inserted \"" + values + "\" into the table \"" + name + "\"."
     except psycopg2.Error as e:
         content = "Error! Is the URL valid?"
         content += "<br>" + e.pgerror
         conn.rollback()
+        print("[INFO] Failed to insert \"" + values + "\" into table " + name)
         return content, 400
 
 @app.route("/api/v1/<name>/create/<params>")
 def create(name, params):
+    name = name.replace("-", "_")
     param_list = []
     for param in params.split(";"):
         param_list.append(param + " varchar")
@@ -85,11 +96,13 @@ def create(name, params):
         cur.execute("DROP TABLE IF EXISTS " + name + ";")
         cur.execute("CREATE TABLE " + name + " (" + params + ");")
         conn.commit()
+        print("[INFO] Created table " + name)
         return "Ok! Created the table \"" + name + "\"."
     except psycopg2.Error as e:
         content = "Error! Is the URL valid? (Params: " + params + ")"
         content += "<br>" + e.pgerror
         conn.rollback()
+        print("[INFO] Failed when creating table " + name)
         return content, 400
 
 
