@@ -11,8 +11,9 @@
 
 import psycopg2
 import atexit
-from flask import Flask
+from flask import Flask, send_file
 from gevent.wsgi import WSGIServer
+from io import BytesIO
 
 DB_NAME = "pohjisiot"
 DB_USER = "postgres"
@@ -44,6 +45,25 @@ def heippa():
 def api_example():
     return "Pohjis IoT Server"
 
+# Exports the table as a .csv
+@app.route("/api/v1/<name>.csv")
+def api_csv(name):
+    csv = ""
+    def write_cur_to_output(titles):
+        nonlocal csv
+        for record in cur:
+            csv += ",".join(record)
+            if titles:
+                csv += ","
+            else:
+                csv += "\n"
+        csv += "\n"
+    cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
+    write_cur_to_output(True)
+    cur.execute("SELECT * FROM " + name + ";")
+    write_cur_to_output(False)
+    return send_file(BytesIO(csv.encode()), attachment_filename = name + ".csv", mimetype = "text/csv")
+
 # Prints out the values contained in the table <name>
 @app.route("/api/v1/<name>/print")
 def api_print(name):
@@ -58,8 +78,8 @@ def api_print(name):
             if not one_line: output += "</tr>"
         if one_line: output += "</tr>"
     output = "<div>"
-    output += "<h3>" + name + "</h3>"
-    output += "<button>Export to .csv</button>"
+    output += "<h2>" + name + "</h2>"
+    output += "<a href='/api/v1/" + name + ".csv'><button>Export to .csv</button></a>"
     output += "<table>"
     cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
     write_cur_to_output(True)
