@@ -66,7 +66,7 @@ def api_csv(name):
         return send_file(BytesIO(csv.encode()), attachment_filename = name + ".csv", mimetype = "text/csv")
     except psycopg2.Error as e:
         content = "Error! Is the URL valid?"
-        content += "<br>" + e.pgerror
+        content += "<br><span style='display:none;'>" + e.pgerror + "</span>"
         conn.rollback()
         print("[INFO] Failed to export csv from table: " + name)
         return content, 400
@@ -98,7 +98,7 @@ def api_print(name):
         return output
     except psycopg2.Error as e:
         content = "Error! Is the URL valid?"
-        content += "<br>" + e.pgerror
+        content += "<br><span style='display:none;'>" + e.pgerror + "</span>"
         conn.rollback()
         print("[INFO] Failed to print table: " + name)
         return content, 400
@@ -115,7 +115,7 @@ def insert(name, values):
         return "Ok! Inserted \"" + values + "\" into the table \"" + name + "\"."
     except psycopg2.Error as e:
         content = "Error! Is the URL valid?"
-        content += "<br>" + e.pgerror
+        content += "<br><span style='display:none;'>" + e.pgerror + "</span>"
         conn.rollback()
         print("[INFO] Failed to insert \"" + values + "\" into table " + name)
         return content, 400
@@ -135,7 +135,7 @@ def create(name, params):
         return "Ok! Created the table \"" + name + "\"."
     except psycopg2.Error as e:
         content = "Error! Is the URL valid? (Params: " + params + ")"
-        content += "<br>" + e.pgerror
+        content += "<br><span style='display:none;'>" + e.pgerror + "</span>"
         conn.rollback()
         print("[INFO] Failed when creating table " + name)
         return content, 400
