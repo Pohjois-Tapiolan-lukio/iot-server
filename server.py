@@ -58,11 +58,18 @@ def api_csv(name):
             else:
                 csv += "\n"
         csv += "\n"
-    cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
-    write_cur_to_output(True)
-    cur.execute("SELECT * FROM " + name + ";")
-    write_cur_to_output(False)
-    return send_file(BytesIO(csv.encode()), attachment_filename = name + ".csv", mimetype = "text/csv")
+    try:
+        cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
+        write_cur_to_output(True)
+        cur.execute("SELECT * FROM " + name + ";")
+        write_cur_to_output(False)
+        return send_file(BytesIO(csv.encode()), attachment_filename = name + ".csv", mimetype = "text/csv")
+    except psycopg2.Error as e:
+        content = "Error! Is the URL valid?"
+        content += "<br>" + e.pgerror
+        conn.rollback()
+        print("[INFO] Failed to export csv from table: " + name)
+        return content, 400
 
 # Prints out the values contained in the table <name>
 @app.route("/api/v1/<name>/print")
@@ -81,13 +88,21 @@ def api_print(name):
     output += "<h2>" + name + "</h2>"
     output += "<a href='/api/v1/" + name + ".csv'><button>Export to .csv</button></a>"
     output += "<table>"
-    cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
-    write_cur_to_output(True)
-    cur.execute("SELECT * FROM " + name + ";")
-    write_cur_to_output(False)
-    output += "</table>"
-    print("[INFO] Printed table " + name)
-    return output
+    try:
+        cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
+        write_cur_to_output(True)
+        cur.execute("SELECT * FROM " + name + ";")
+        write_cur_to_output(False)
+        output += "</table>"
+        print("[INFO] Printed table " + name)
+        return output
+    except psycopg2.Error as e:
+        content = "Error! Is the URL valid?"
+        content += "<br>" + e.pgerror
+        conn.rollback()
+        print("[INFO] Failed to print table: " + name)
+        return content, 400
+
 
 @app.route("/api/v1/<name>/insert/<values>")
 def insert(name, values):
