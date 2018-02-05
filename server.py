@@ -41,12 +41,12 @@ def heippa():
     return "Moikka!"
 
 # Testing url
-@app.route("/api/v1/command/to/run")
+@app.route("/database/command/to/run")
 def api_example():
     return "Pohjis IoT Server"
 
 # Exports the table as a .csv
-@app.route("/api/v1/<name>.csv")
+@app.route("/database/<name>.csv")
 def api_csv(name):
     csv = ""
     def write_cur_to_output(titles):
@@ -72,7 +72,7 @@ def api_csv(name):
         return content, 400
 
 # Prints out the values contained in the table <name>
-@app.route("/api/v1/<name>/print")
+@app.route("/database/<name>/print")
 def api_print(name):
     name = name.replace("-", "_")
     def write_cur_to_output(one_line):
@@ -86,7 +86,7 @@ def api_print(name):
         if one_line: output += "</tr>"
     output = "<div>"
     output += "<h2>" + name + "</h2>"
-    output += "<a href='/api/v1/" + name + ".csv'><button>Export to .csv</button></a>"
+    output += "<a href='/database/" + name + ".csv'><button>Export to .csv</button></a>"
     output += "<table>"
     try:
         cur.execute("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = %s", (name, ))
@@ -104,7 +104,7 @@ def api_print(name):
         return content, 400
 
 
-@app.route("/api/v1/<name>/insert/<values>")
+@app.route("/database/<name>/insert/<values>")
 def insert(name, values):
     name = name.replace("-", "_")
     values = ", ".join(values.split(";"))
@@ -120,7 +120,7 @@ def insert(name, values):
         print("[INFO] Failed to insert \"" + values + "\" into table " + name)
         return content, 400
 
-@app.route("/api/v1/<name>/create/<params>")
+@app.route("/database/<name>/create/<params>")
 def create(name, params):
     name = name.replace("-", "_")
     param_list = []
